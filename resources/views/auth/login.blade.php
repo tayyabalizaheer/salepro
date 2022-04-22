@@ -40,7 +40,11 @@
                 @endif
             </div>
             @if(session()->has('delete_message'))
-            <div class="alert alert-danger alert-dismissible text-center"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ session()->get('delete_message') }}</div> 
+            <div class="alert alert-danger alert-dismissible text-center"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ session()->get('delete_message') }}</div>
+            @endif
+            @if(session()->has('success'))
+            <div class="alert alert-success alert-dismissible text-center"><button type="button" class="close" data-dismiss="alert"
+                    aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ session()->get('success') }}</div>
             @endif
             <form method="POST" action="{{ route('login') }}" id="login-form">
               @csrf
@@ -53,7 +57,7 @@
                     </p>
                 @endif
               </div>
-              
+
               <div class="form-group-material">
                 <input id="login-password" type="password" name="password" required class="input-material" value="">
                 <label for="login-password" class="label-material">{{trans('file.Password')}}</label>

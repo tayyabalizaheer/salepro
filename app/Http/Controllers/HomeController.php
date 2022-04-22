@@ -16,6 +16,7 @@ use App\Account;
 use App\Product_Sale;
 use App\Customer;
 use App\Product;
+use App\DeviceToken;
 use App\RewardPointSetting;
 use DB;
 use Auth;
@@ -30,9 +31,36 @@ class HomeController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        // $this->middleware('auth');
     }
+    public function device_registration(Request $request)
+    {
+        // dd($request, $request->cookie('device_token'));
 
+        $input = $request->all();
+
+        $this->validate($request, [
+            'username' => 'required',
+            'name' => 'required',
+            'password' => 'required',
+        ]);
+
+        $fieldType = filter_var($request->username, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+
+        if(auth()->attempt(array($fieldType => $input['username'], 'password' => $input['password'])))
+        {
+            $DeviceToken = new DeviceToken();
+            $DeviceToken->name = $request->name;
+            $DeviceToken->token = $request->cookie('device_token');
+            $DeviceToken->save();
+
+            Auth::logout();
+            return redirect('/login')->with('success','Device Register');
+        }
+        else {
+            return back()->with('error', 'Wrong Credentials');
+        }
+    }
     public function dashboard()
     {
         return view('home');
@@ -53,7 +81,7 @@ class HomeController extends Controller
             "sms" => $messageBody,
             "csms_id" => $csmsId
         ];
-        
+
         $url = "https://smsplus.sslwireless.com/api/v3/send-sms";
         $params = json_encode($params);
 
@@ -152,7 +180,7 @@ class HomeController extends Controller
                         $purchased_qty = 0;
                         $purchased_amount = 0;
                         $sold_qty = $product_sale->sold_qty * $qty_list[$index];
-                        
+
                         foreach ($product_purchase_data as $product_purchase) {
                             $purchased_qty += $product_purchase->qty;
                             $purchased_amount += $product_purchase->total;
@@ -231,7 +259,7 @@ class HomeController extends Controller
                         $purchased_qty = 0;
                         $purchased_amount = 0;
                         $sold_qty = $product_sale->sold_qty * $qty_list[$index];
-                        
+
                         foreach ($product_purchase_data as $product_purchase) {
                             $purchased_qty += $product_purchase->qty;
                             $purchased_amount += $product_purchase->total;
@@ -316,7 +344,7 @@ class HomeController extends Controller
                 $payroll_amount = Payroll::whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->sum('amount');
             }
             $sent_amount = $sent_amount + $return_amount + $expense_amount + $payroll_amount;
-            
+
             $payment_recieved[] = number_format((float)($recieved_amount + $purchase_return_amount), 2, '.', '');
             $payment_sent[] = number_format((float)$sent_amount, 2, '.', '');
             $month[] = date("F", strtotime($start_date));
@@ -381,7 +409,7 @@ class HomeController extends Controller
                         $purchased_qty = 0;
                         $purchased_amount = 0;
                         $sold_qty = $product_sale->sold_qty * $qty_list[$index];
-                        
+
                         foreach ($product_purchase_data as $product_purchase) {
                             $purchased_qty += $product_purchase->qty;
                             $purchased_amount += $product_purchase->total;
@@ -459,7 +487,7 @@ class HomeController extends Controller
                         $purchased_qty = 0;
                         $purchased_amount = 0;
                         $sold_qty = $product_sale->sold_qty * $qty_list[$index];
-                        
+
                         foreach ($product_purchase_data as $product_purchase) {
                             $purchased_qty += $product_purchase->qty;
                             $purchased_amount += $product_purchase->total;
@@ -510,7 +538,7 @@ class HomeController extends Controller
             $data[2] = $profit;
             $data[3] = $purchase_return;
         }
-        
+
         return $data;
     }
 
