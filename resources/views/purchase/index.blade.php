@@ -31,7 +31,9 @@
                         <label class="d-tc mt-2"><strong>{{trans('file.Choose Warehouse')}}</strong> &nbsp;</label>
                         <div class="d-tc">
                             <select id="warehouse_id" name="warehouse_id" class="selectpicker form-control" data-live-search="true" data-live-search-style="begins" >
-                                <option value="0">{{trans('file.All Warehouse')}}</option>
+                                @if (auth()->user()->role_id <= 2)
+                                    <option value="0">{{trans('file.All Warehouse')}}</option>
+                                @endif
                                 @foreach($lims_warehouse_list as $warehouse)
                                     @if($warehouse->id == $warehouse_id)
                                         <option selected value="{{$warehouse->id}}">{{$warehouse->name}}</option>

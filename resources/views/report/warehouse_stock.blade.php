@@ -11,7 +11,9 @@
 						<h3>{{trans('file.Stock Chart')}} </h3>
 						<p>Select warehouse to view chart</p>
 						<select class="form-control mb-3" id="warehouse_id" name="warehouse_id">
-							<option value="0">{{trans('file.All Warehouse')}}</option>
+							@if (auth()->user()->role_id <= 2)
+					    <option value="0">{{trans('file.All Warehouse')}}</option>
+                    @endif
 							@foreach($lims_warehouse_list as $warehouse)
 							<option value="{{$warehouse->id}}">{{$warehouse->name}}</option>
 							@endforeach

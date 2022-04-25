@@ -58,7 +58,16 @@ class ReportController extends Controller
             $total_qty = Product::where('is_active', true)->sum('qty');
             $total_price = DB::table('products')->where('is_active', true)->sum(DB::raw('price * qty'));
             $total_cost = DB::table('products')->where('is_active', true)->sum(DB::raw('cost * qty'));
-            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            if(Auth::user()->role_id > 2) {
+                $lims_warehouse_list = Warehouse::where([
+                    ['is_active', true],
+                    ['id', Auth::user()->warehouse_id]
+                ])->get();
+
+            }
+            else {
+                $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            }
             $warehouse_id = 0;
             return view('report.warehouse_stock', compact('total_item', 'total_qty', 'total_price', 'total_cost', 'lims_warehouse_list', 'warehouse_id'));
         }
@@ -97,7 +106,16 @@ class ReportController extends Controller
                             ['products.is_active', true],
                             ['product_warehouse.warehouse_id', $data['warehouse_id']]
                         ])->sum(DB::raw('products.cost * product_warehouse.qty'));
-        $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_list = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        }
         $warehouse_id = $data['warehouse_id'];
         return view('report.warehouse_stock', compact('total_item', 'total_qty', 'total_price', 'total_cost', 'lims_warehouse_list', 'warehouse_id'));
     }
@@ -136,7 +154,16 @@ class ReportController extends Controller
             $prev_month = date('m', strtotime('-1 month', strtotime($year.'-'.$month.'-01')));
             $next_year = date('Y', strtotime('+1 month', strtotime($year.'-'.$month.'-01')));
             $next_month = date('m', strtotime('+1 month', strtotime($year.'-'.$month.'-01')));
-            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            if(Auth::user()->role_id > 2) {
+                $lims_warehouse_list = Warehouse::where([
+                    ['is_active', true],
+                    ['id', Auth::user()->warehouse_id]
+                ])->get();
+
+            }
+            else {
+                $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            }
             $warehouse_id = 0;
             return view('report.daily_sale', compact('total_discount','order_discount', 'total_tax', 'order_tax', 'shipping_cost', 'grand_total', 'start_day', 'year', 'month', 'number_of_day', 'prev_year', 'prev_month', 'next_year', 'next_month', 'lims_warehouse_list', 'warehouse_id'));
         }
@@ -179,7 +206,16 @@ class ReportController extends Controller
         $prev_month = date('m', strtotime('-1 month', strtotime($year.'-'.$month.'-01')));
         $next_year = date('Y', strtotime('+1 month', strtotime($year.'-'.$month.'-01')));
         $next_month = date('m', strtotime('+1 month', strtotime($year.'-'.$month.'-01')));
-        $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_list = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        }
         $warehouse_id = $data['warehouse_id'];
         return view('report.daily_sale', compact('total_discount','order_discount', 'total_tax', 'order_tax', 'shipping_cost', 'grand_total', 'start_day', 'year', 'month', 'number_of_day', 'prev_year', 'prev_month', 'next_year', 'next_month', 'lims_warehouse_list', 'warehouse_id'));
 
@@ -219,7 +255,16 @@ class ReportController extends Controller
             $prev_month = date('m', strtotime('-1 month', strtotime($year.'-'.$month.'-01')));
             $next_year = date('Y', strtotime('+1 month', strtotime($year.'-'.$month.'-01')));
             $next_month = date('m', strtotime('+1 month', strtotime($year.'-'.$month.'-01')));
-            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            if(Auth::user()->role_id > 2) {
+                $lims_warehouse_list = Warehouse::where([
+                    ['is_active', true],
+                    ['id', Auth::user()->warehouse_id]
+                ])->get();
+
+            }
+            else {
+                $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            }
             $warehouse_id = 0;
             return view('report.daily_purchase', compact('total_discount','order_discount', 'total_tax', 'order_tax', 'shipping_cost', 'grand_total', 'start_day', 'year', 'month', 'number_of_day', 'prev_year', 'prev_month', 'next_year', 'next_month', 'lims_warehouse_list', 'warehouse_id'));
         }
@@ -228,7 +273,7 @@ class ReportController extends Controller
     }
 
     public function dailyPurchaseByWarehouse(Request $request, $year, $month)
-    {        
+    {
         $data = $request->all();
         if($data['warehouse_id'] == 0)
             return redirect()->back();
@@ -262,7 +307,16 @@ class ReportController extends Controller
         $prev_month = date('m', strtotime('-1 month', strtotime($year.'-'.$month.'-01')));
         $next_year = date('Y', strtotime('+1 month', strtotime($year.'-'.$month.'-01')));
         $next_month = date('m', strtotime('+1 month', strtotime($year.'-'.$month.'-01')));
-        $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_list = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        }
         $warehouse_id = $data['warehouse_id'];
 
         return view('report.daily_purchase', compact('total_discount','order_discount', 'total_tax', 'order_tax', 'shipping_cost', 'grand_total', 'start_day', 'year', 'month', 'number_of_day', 'prev_year', 'prev_month', 'next_year', 'next_month', 'lims_warehouse_list', 'warehouse_id'));
@@ -298,7 +352,16 @@ class ReportController extends Controller
                 $total[] = number_format((float)$temp_total, 2, '.', '');
                 $start = strtotime("+1 month", $start);
             }
-            $lims_warehouse_list = Warehouse::where('is_active',true)->get();
+            if(Auth::user()->role_id > 2) {
+                $lims_warehouse_list = Warehouse::where([
+                    ['is_active', true],
+                    ['id', Auth::user()->warehouse_id]
+                ])->get();
+
+            }
+            else {
+                $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            }
             $warehouse_id = 0;
             return view('report.monthly_sale', compact('year', 'total_discount', 'order_discount', 'total_tax', 'order_tax', 'shipping_cost', 'total', 'lims_warehouse_list', 'warehouse_id'));
         }
@@ -338,7 +401,16 @@ class ReportController extends Controller
             $total[] = number_format((float)$temp_total, 2, '.', '');
             $start = strtotime("+1 month", $start);
         }
-        $lims_warehouse_list = Warehouse::where('is_active',true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_list = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        }
         $warehouse_id = $data['warehouse_id'];
         return view('report.monthly_sale', compact('year', 'total_discount', 'order_discount', 'total_tax', 'order_tax', 'shipping_cost', 'total', 'lims_warehouse_list', 'warehouse_id'));
     }
@@ -363,7 +435,7 @@ class ReportController extends Controller
                     'SUM(grand_total) AS grand_total'
                 );
                 $purchase_data = Purchase::whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->selectRaw(implode(',', $query1))->get();
-                
+
                 $total_discount[] = number_format((float)$purchase_data[0]->total_discount, 2, '.', '');
                 $order_discount[] = number_format((float)$purchase_data[0]->order_discount, 2, '.', '');
                 $total_tax[] = number_format((float)$purchase_data[0]->total_tax, 2, '.', '');
@@ -372,7 +444,16 @@ class ReportController extends Controller
                 $grand_total[] = number_format((float)$purchase_data[0]->grand_total, 2, '.', '');
                 $start = strtotime("+1 month", $start);
             }
-            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            if(Auth::user()->role_id > 2) {
+                $lims_warehouse_list = Warehouse::where([
+                    ['is_active', true],
+                    ['id', Auth::user()->warehouse_id]
+                ])->get();
+
+            }
+            else {
+                $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            }
             $warehouse_id = 0;
             return view('report.monthly_purchase', compact('year', 'total_discount', 'order_discount', 'total_tax', 'order_tax', 'shipping_cost', 'grand_total', 'lims_warehouse_list', 'warehouse_id'));
         }
@@ -402,7 +483,7 @@ class ReportController extends Controller
                 'SUM(grand_total) AS grand_total'
             );
             $purchase_data = Purchase::where('warehouse_id', $data['warehouse_id'])->whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->selectRaw(implode(',', $query1))->get();
-            
+
             $total_discount[] = number_format((float)$purchase_data[0]->total_discount, 2, '.', '');
             $order_discount[] = number_format((float)$purchase_data[0]->order_discount, 2, '.', '');
             $total_tax[] = number_format((float)$purchase_data[0]->total_tax, 2, '.', '');
@@ -411,7 +492,16 @@ class ReportController extends Controller
             $grand_total[] = number_format((float)$purchase_data[0]->grand_total, 2, '.', '');
             $start = strtotime("+1 month", $start);
         }
-        $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_list = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        }
         $warehouse_id = $data['warehouse_id'];
         return view('report.monthly_purchase', compact('year', 'total_discount', 'order_discount', 'total_tax', 'order_tax', 'shipping_cost', 'grand_total', 'lims_warehouse_list', 'warehouse_id'));
     }
@@ -422,7 +512,7 @@ class ReportController extends Controller
         if($role->hasPermissionTo('best-seller')){
             $start = strtotime(date("Y-m", strtotime("-2 months")).'-01');
             $end = strtotime(date("Y").'-'.date("m").'-31');
-            
+
             while($start <= $end)
             {
                 $start_date = date("Y-m", $start).'-'.'01';
@@ -441,7 +531,16 @@ class ReportController extends Controller
                 $start = strtotime("+1 month", $start);
             }
             $start_month = date("F Y", strtotime('-2 month'));
-            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            if(Auth::user()->role_id > 2) {
+                $lims_warehouse_list = Warehouse::where([
+                    ['is_active', true],
+                    ['id', Auth::user()->warehouse_id]
+                ])->get();
+
+            }
+            else {
+                $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+            }
             $warehouse_id = 0;
             //return $product;
             return view('report.best_seller', compact('product', 'sold_qty', 'start_month', 'lims_warehouse_list', 'warehouse_id'));
@@ -466,7 +565,7 @@ class ReportController extends Controller
 
             $best_selling_qty = DB::table('sales')
                                 ->join('product_sales', 'sales.id', '=', 'product_sales.sale_id')->select(DB::raw('product_sales.product_id, sum(product_sales.qty) as sold_qty'))->where('sales.warehouse_id', $data['warehouse_id'])->whereDate('sales.created_at', '>=' , $start_date)->whereDate('sales.created_at', '<=' , $end_date)->groupBy('product_id')->orderBy('sold_qty', 'desc')->take(1)->get();
-                                
+
             if(!count($best_selling_qty)) {
                 $product[] = '';
                 $sold_qty[] = 0;
@@ -479,7 +578,16 @@ class ReportController extends Controller
             $start = strtotime("+1 month", $start);
         }
         $start_month = date("F Y", strtotime('-2 month'));
-        $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_list = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        }
         $warehouse_id = $data['warehouse_id'];
         return view('report.best_seller', compact('product', 'sold_qty', 'start_month', 'lims_warehouse_list', 'warehouse_id'));
     }
@@ -534,7 +642,7 @@ class ReportController extends Controller
             $product_cost += $purchased_amount;
             $product_tax += $purchased_tax;
         }
-        
+
         $purchase = Purchase::whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->selectRaw(implode(',', $query1))->get();
         $total_purchase = Purchase::whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->count();
         $sale = Sale::whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->selectRaw(implode(',', $query1))->get();
@@ -599,7 +707,16 @@ class ReportController extends Controller
                             ->whereDate('payments.created_at', '>=' , $start_date)
                             ->whereDate('payments.created_at', '<=' , $end_date)->sum('payments.amount');
         $cash_payment_purchase =  $payment_sent - $credit_card_payment_purchase - $cheque_payment_purchase;
-        $lims_warehouse_all = Warehouse::where('is_active',true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_all = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_all = Warehouse::where('is_active', true)->get();
+        }
         $warehouse_name = [];
         foreach ($lims_warehouse_all as $warehouse) {
             $warehouse_name[] = $warehouse->name;
@@ -619,7 +736,16 @@ class ReportController extends Controller
         $start_date = $data['start_date'];
         $end_date = $data['end_date'];
         $warehouse_id = $data['warehouse_id'];
-        $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_list = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        }
         return view('report.product_report',compact('start_date', 'end_date', 'warehouse_id', 'lims_warehouse_list'));
     }
 
@@ -634,7 +760,7 @@ class ReportController extends Controller
         $product_name = [];
         $product_qty = [];
 
-        $columns = array( 
+        $columns = array(
             1 => 'name'
         );
 
@@ -671,9 +797,9 @@ class ReportController extends Controller
                                 ->get();
         }
 
-        $totalFiltered = $totalData; 
+        $totalFiltered = $totalData;
         $data = [];
-        foreach ($lims_product_all as $product) {           
+        foreach ($lims_product_all as $product) {
             $variant_id_all = [];
             if($warehouse_id == 0) {
                 if($product->is_variant) {
@@ -1094,7 +1220,7 @@ class ReportController extends Controller
                             }
                         }
                         $nestedData['purchase_returned_qty'] = $purchase_returned_qty;
-                        
+
                         if($nestedData['purchased_qty'] > 0)
                             $nestedData['profit'] = $nestedData['sold_amount'] - (($nestedData['purchased_amount'] / $nestedData['purchased_qty']) * $nestedData['sold_qty']);
                         else
@@ -1285,7 +1411,7 @@ class ReportController extends Controller
                         $nestedData['in_stock'] = 0;
 
                     $nestedData['profit'] = number_format((float)$nestedData['profit'], 2, '.', '');
-                    
+
                     $data[] = $nestedData;
                 }
             }
@@ -1293,12 +1419,12 @@ class ReportController extends Controller
         /*$totalData = count($data);
         $totalFiltered = $totalData;*/
         $json_data = array(
-            "draw"            => intval($request->input('draw')),  
-            "recordsTotal"    => intval($totalData),  
-            "recordsFiltered" => intval($totalFiltered), 
-            "data"            => $data   
+            "draw"            => intval($request->input('draw')),
+            "recordsTotal"    => intval($totalData),
+            "recordsFiltered" => intval($totalFiltered),
+            "data"            => $data
         );
-            
+
         echo json_encode($json_data);
     }
 
@@ -1369,11 +1495,20 @@ class ReportController extends Controller
                                         ['variant_id', $variant_data->id],
                                         ['warehouse_id', $warehouse_id]
                                     ])->first()->qty;
-                    
+
                 }
             }
         }
-        $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_list = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        }
         return view('report.purchase_report',compact('product_id', 'variant_id', 'product_name', 'product_qty', 'start_date', 'end_date', 'lims_warehouse_list', 'warehouse_id'));
     }
 
@@ -1388,7 +1523,7 @@ class ReportController extends Controller
         $product_name = [];
         $product_qty = [];
         $lims_product_all = Product::select('id', 'name', 'qty', 'is_variant')->where('is_active', true)->get();
-        
+
         foreach ($lims_product_all as $product) {
             $lims_product_sale_data = null;
             $variant_id_all = [];
@@ -1445,11 +1580,20 @@ class ReportController extends Controller
                                         ['variant_id', $variant_data->id],
                                         ['warehouse_id', $warehouse_id]
                                     ])->first()->qty;
-                    
+
                 }
             }
         }
-        $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_list = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        }
         return view('report.sale_report',compact('product_id', 'variant_id', 'product_name', 'product_qty', 'start_date', 'end_date', 'lims_warehouse_list','warehouse_id'));
     }
 
@@ -1458,7 +1602,7 @@ class ReportController extends Controller
         $data = $request->all();
         $start_date = $data['start_date'];
         $end_date = $data['end_date'];
-        
+
         $lims_payment_data = Payment::whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->get();
         return view('report.payment_report',compact('lims_payment_data', 'start_date', 'end_date'));
     }
@@ -1493,7 +1637,16 @@ class ReportController extends Controller
         foreach ($lims_return_data as $key => $return) {
             $lims_product_return_data[$key] = ProductReturn::where('return_id', $return->id)->get();
         }
-        $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        if(Auth::user()->role_id > 2) {
+            $lims_warehouse_list = Warehouse::where([
+                ['is_active', true],
+                ['id', Auth::user()->warehouse_id]
+            ])->get();
+
+        }
+        else {
+            $lims_warehouse_list = Warehouse::where('is_active', true)->get();
+        }
         return view('report.warehouse_report', compact('warehouse_id', 'start_date', 'end_date', 'lims_purchase_data', 'lims_product_purchase_data', 'lims_sale_data', 'lims_product_sale_data', 'lims_warehouse_list', 'lims_quotation_data', 'lims_product_quotation_data', 'lims_return_data', 'lims_product_return_data', 'lims_expense_data'));
     }
 
@@ -1509,9 +1662,9 @@ class ReportController extends Controller
         $lims_product_transfer_data = [];
 
         $lims_sale_data = Sale::with('customer', 'warehouse')->where('user_id', $user_id)->whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->orderBy('created_at', 'desc')->get();
-        $lims_purchase_data = Purchase::with('warehouse')->where('user_id', $user_id)->whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->orderBy('created_at', 'desc')->get();        
+        $lims_purchase_data = Purchase::with('warehouse')->where('user_id', $user_id)->whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->orderBy('created_at', 'desc')->get();
         $lims_quotation_data = Quotation::with('customer', 'warehouse')->where('user_id', $user_id)->whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->orderBy('created_at', 'desc')->get();
-        $lims_transfer_data = Transfer::with('fromWarehouse', 'toWarehouse')->where('user_id', $user_id)->whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->orderBy('created_at', 'desc')->get();        
+        $lims_transfer_data = Transfer::with('fromWarehouse', 'toWarehouse')->where('user_id', $user_id)->whereDate('created_at', '>=' , $start_date)->whereDate('created_at', '<=' , $end_date)->orderBy('created_at', 'desc')->get();
         $lims_payment_data = DB::table('payments')
                            ->where('user_id', $user_id)
                            ->whereDate('payments.created_at', '>=' , $start_date)

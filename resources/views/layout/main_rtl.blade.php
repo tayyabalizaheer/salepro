@@ -203,7 +203,9 @@
                   ?>
                   @if($add_permission_active)
                   <li id="purchase-create-menu"><a href="{{route('purchases.create')}}">{{trans('file.Add Purchase')}}</a></li>
+                  @if (auth()->user()->role_id <= 2)
                   <li id="purchase-import-menu"><a href="{{url('purchases/purchase_by_csv')}}">{{trans('file.Import Purchase By CSV')}}</a></li>
+                  @endif
                   @endif
                 </ul>
               </li>
@@ -247,7 +249,9 @@
                     @if($sale_add_permission_active)
                     <li><a href="{{route('sale.pos')}}">POS</a></li>
                     <li id="sale-create-menu"><a href="{{route('sales.create')}}">{{trans('file.Add Sale')}}</a></li>
+                    @if (auth()->user()->role_id <= 2)
                     <li id="sale-import-menu"><a href="{{url('sales/sale_by_csv')}}">{{trans('file.Import Sale By CSV')}}</a></li>
+                    @endif
                     @endif
                   @endif
 
@@ -333,7 +337,9 @@
                   ?>
                   @if($add_permission_active)
                   <li id="transfer-create-menu"><a href="{{route('transfers.create')}}">{{trans('file.Add Transfer')}}</a></li>
+                  @if (auth()->user()->role_id <= 2)
                   <li id="transfer-import-menu"><a href="{{url('transfers/transfer_by_csv')}}">{{trans('file.Import Transfer By CSV')}}</a></li>
+                  @endif
                   @endif
                 </ul>
               </li>

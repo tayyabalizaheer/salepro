@@ -1139,11 +1139,16 @@
                     <nav class="navbar">
                       <div class="container-fluid">
                         <div class="navbar-holder d-flex align-items-center justify-content-between">
-                          <a id="toggle-btn" href="#" class="menu-btn"><i class="fa fa-bars"> </i></a>
+                          {{-- <a id="toggle-btn" href="#" class="menu-btn"><i class="fa fa-bars"> </i></a> --}}
+                          <a href="{{ url('/') }}" class="menu-btn" data-toggle="tooltip" title="Exit">Exit</a>
                           <div class="navbar-header">
 
                           <ul class="nav-menu list-unstyled d-flex flex-md-row align-items-md-center">
-                            <li class="nav-item"><a id="btnFullscreen" data-toggle="tooltip" title="Full Screen"><i class="dripicons-expand"></i></a></li>
+                            <li class="nav-item">
+
+
+                                <a id="btnFullscreen" data-toggle="tooltip" title="Full Screen"><i class="dripicons-expand"></i></a>
+                            </li>
                             <?php
                                 $general_setting_permission = DB::table('permissions')->where('name', 'general_setting')->first();
                                 $general_setting_permission_active = DB::table('role_has_permissions')->where([
@@ -1749,7 +1754,9 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <select required name="warehouseId" class="form-control">
-                                    <option value="0">{{trans('file.All Warehouse')}}</option>
+                                    @if (auth()->user()->role_id <= 2)
+					    <option value="0">{{trans('file.All Warehouse')}}</option>
+                    @endif
                                     @foreach($lims_warehouse_list as $warehouse)
                                     <option value="{{$warehouse->id}}">{{$warehouse->name}}</option>
                                     @endforeach

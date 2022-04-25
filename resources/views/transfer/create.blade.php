@@ -20,7 +20,7 @@
                                         <div class="form-group">
                                             <label>{{trans('file.From Warehouse')}} *</label>
                                             <select required name="from_warehouse_id" class="selectpicker form-control" data-live-search="true" data-live-search-style="begins" id="from-warehouse-id" title="Select warehouse...">
-                                                @foreach($lims_warehouse_list as $warehouse)
+                                                @foreach($lims_warehouse_from as $warehouse)
                                                 <option value="{{$warehouse->id}}">{{$warehouse->name}}</option>
                                                 @endforeach
                                             </select>
@@ -30,13 +30,14 @@
                                         <div class="form-group">
                                             <label>{{trans('file.To Warehouse')}} *</label>
                                             <select required name="to_warehouse_id" class="selectpicker form-control" data-live-search="true" data-live-search-style="begins" title="Select warehouse...">
-                                                @foreach($lims_warehouse_list as $warehouse)
+                                                @foreach($lims_warehouse_to as $warehouse)
                                                 <option value="{{$warehouse->id}}">{{$warehouse->name}}</option>
                                                 @endforeach
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
+                                        @if (auth()->user()->role_id <= 2)
                                         <div class="form-group">
                                             <label>{{trans("file.Status")}}</label>
                                             <select name="status" class="form-control selectpicker">
@@ -45,6 +46,7 @@
                                                 <option value="3">{{trans('file.Sent')}}</option>
                                             </select>
                                         </div>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="row mt-3">
