@@ -17,11 +17,11 @@ Route::get('device',function(){
 });
 Route::post('/device', 'HomeController@device_registration')->name('device.registration');
 
-Route::group(['middleware' => 'auth'], function() {
+Route::group(['middleware' => ['auth','device_registration']], function() {
 	Route::get('/dashboard', 'HomeController@dashboard');
 });
 
-Route::group(['middleware' => ['auth', 'active']], function() {
+Route::group(['middleware' => ['auth', 'active','device_registration']], function() {
 
 	Route::get('/', 'HomeController@index');
 	Route::get('/dashboard-filter/{start_date}/{end_date}', 'HomeController@dashboardFilter');
