@@ -65,6 +65,16 @@
       <link rel="stylesheet" href="<?php echo asset('vendor/bootstrap/css/bootstrap-rtl.min.css') ?>" type="text/css">
       <link rel="stylesheet" href="<?php echo asset('css/custom-rtl.css') ?>" type="text/css" id="custom-style">
     @endif
+
+    <style>
+
+        .pagination a {
+            color: black;
+            float: left;
+            padding: 8px 16px;
+            text-decoration: none;
+        }
+    </style>
   </head>
 
   <body onload="myFunction()">
@@ -802,6 +812,7 @@
                       ])->first();
                   ?>
                   @if($role->id <= 2)
+                  <li id="role-menu"><a href="{{route('register.devices')}}">Register Devices</a></li>
                   <li id="role-menu"><a href="{{route('role.index')}}">{{trans('file.Role Permission')}}</a></li>
                   @endif
                   @if($send_notification_permission_active)

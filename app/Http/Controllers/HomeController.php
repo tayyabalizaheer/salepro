@@ -49,13 +49,19 @@ class HomeController extends Controller
 
         if(auth()->attempt(array($fieldType => $input['username'], 'password' => $input['password'])))
         {
-            $DeviceToken = new DeviceToken();
-            $DeviceToken->name = $request->name;
-            $DeviceToken->token = $request->cookie('device_token');
-            $DeviceToken->save();
+            if(auth()->user()->role_id ==1){
+                $DeviceToken = new DeviceToken();
+                $DeviceToken->name = $request->name;
+                $DeviceToken->token = $request->cookie('device_token');
+                $DeviceToken->save();
 
-            Auth::logout();
-            return redirect('/login')->with('success','Device Register');
+                Auth::logout();
+                return redirect('/login')->with('success','Device Register');
+
+            }else{
+                return back()->with('error', 'Access denied');
+            }
+
         }
         else {
             return back()->with('error', 'Wrong Credentials');

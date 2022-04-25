@@ -1,10 +1,10 @@
 <?php
 
-  
+
 
 namespace App\Http\Controllers\Auth;
 
-  
+
 
 use App\Http\Controllers\Controller;
 
@@ -12,17 +12,18 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 use Illuminate\Http\Request;
 
-  
+use App\DeviceToken;
+use Auth;
 
 class LoginController extends Controller
 
 {
 
-  
+
 
     use AuthenticatesUsers;
 
-    
+
 
     protected $redirectTo = '/';
 
@@ -44,7 +45,7 @@ class LoginController extends Controller
 
     }
 
-  
+
 
     /**
 
@@ -57,7 +58,7 @@ class LoginController extends Controller
      */
 
     public function login(Request $request)
-    { 
+    {
 
         $input = $request->all();
 
@@ -70,7 +71,14 @@ class LoginController extends Controller
 
         if(auth()->attempt(array($fieldType => $input['name'], 'password' => $input['password'])))
         {
-            return redirect('/');
+            $DeviceToken = DeviceToken::where('token',$request->cookie('device_token'))->first();
+            if($DeviceToken){
+                return redirect('/');
+            }else{
+                Auth::logout();
+                return back()->with('error','This device is not register. Please contact admin');
+            }
+            // dd($request->cookie('device_token'));
         }
         else {
             return redirect()->route('login')->with('error','Username And Password Are Wrong.');

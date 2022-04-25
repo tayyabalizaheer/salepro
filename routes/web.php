@@ -226,6 +226,9 @@ Route::group(['middleware' => ['auth', 'active']], function() {
 
 	Route::get('backup', 'SettingController@backup')->name('setting.backup');
 	Route::get('setting/general_setting/change-theme/{theme}', 'SettingController@changeTheme');
+
+	Route::get('setting/register-devices', 'SettingController@registerDevices')->name('register.devices');
+	Route::post('setting/register-devices/{id}', 'SettingController@registerDevicesDelete')->name('register.devices.delete');
 	Route::get('setting/mail_setting', 'SettingController@mailSetting')->name('setting.mail');
 	Route::get('setting/sms_setting', 'SettingController@smsSetting')->name('setting.sms');
 	Route::get('setting/createsms', 'SettingController@createSms')->name('setting.createSms');

@@ -42,6 +42,10 @@
             @if(session()->has('delete_message'))
             <div class="alert alert-danger alert-dismissible text-center"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ session()->get('delete_message') }}</div>
             @endif
+            @if(session()->has('error'))
+            <div class="alert alert-danger alert-dismissible text-center"><button type="button" class="close" data-dismiss="alert"
+                    aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ session()->get('error') }}</div>
+            @endif
             @if(session()->has('success'))
             <div class="alert alert-success alert-dismissible text-center"><button type="button" class="close" data-dismiss="alert"
                     aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ session()->get('success') }}</div>
@@ -51,21 +55,13 @@
               <div class="form-group-material">
                 <input id="login-username" type="text" name="name" required class="input-material" value="">
                 <label for="login-username" class="label-material">{{trans('file.UserName')}}</label>
-                @if(session()->has('error'))
-                    <p>
-                        <strong>{{ session()->get('error') }}</strong>
-                    </p>
-                @endif
+
               </div>
 
               <div class="form-group-material">
                 <input id="login-password" type="password" name="password" required class="input-material" value="">
                 <label for="login-password" class="label-material">{{trans('file.Password')}}</label>
-                @if(session()->has('error'))
-                    <p>
-                        <strong>{{ session()->get('error') }}</strong>
-                    </p>
-                @endif
+
               </div>
               <button type="submit" class="btn btn-primary btn-block">{{trans('file.LogIn')}}</button>
             </form>
