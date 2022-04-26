@@ -17,8 +17,13 @@ class DeviceRegistration
      */
     public function handle(Request $request, Closure $next)
     {
-        return $next($request)
-        ->header('Access-Control-Allow-Origin', '*')
-        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        $DeviceToken = DeviceToken::where('token',$request->cookie('device_token'))->first();
+        if($DeviceToken){
+            return $next($request);
+        }else{
+            Auth::logout();
+            return back()->with('error','This device is not register. Please contact admin');
+        }
+        return $next($request);
     }
 }
