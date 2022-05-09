@@ -88,6 +88,116 @@ class SaleController extends Controller
             return redirect()->back()->with('not_permitted', 'Sorry! You are not allowed to access this module');
     }
 
+    public function saleTrash(Type $var = null)
+    {
+        $role = Role::find(Auth::user()->role_id);
+        if($role->hasPermissionTo('sales-index')) {
+            $permissions = Role::findByName($role->name)->permissions;
+            foreach ($permissions as $permission)
+                $all_permission[] = $permission->name;
+            if(empty($all_permission))
+                $all_permission[] = 'dummy text';
+
+            $lims_pos_setting_data = PosSetting::latest()->first();
+            $lims_reward_point_setting_data = RewardPointSetting::latest()->first();
+
+            return view('sale.trash',compact('lims_pos_setting_data','all_permission','lims_reward_point_setting_data'));
+        }
+        else
+            return redirect()->back()->with('not_permitted', 'Sorry! You are not allowed to access this module');
+    }
+
+
+    public function saleTrashData(Request $request)
+    {
+        $columns = array(
+            1 => 'created_at',
+            2 => 'reference_no',
+            7 => 'grand_total',
+            8 => 'paid_amount',
+        );
+        $limit = $request->input('length');
+        $recordsTotal = Sale::onlyTrashed()->count();
+        $sales = Sale::onlyTrashed()->limit($limit)->get();
+        $data = array();
+        if(!empty($sales))
+        {
+            foreach ($sales as $key=>$sale)
+            {
+                $nestedData['id'] = $sale->id;
+                $nestedData['key'] = $key;
+                $nestedData['date'] = date(config('date_format'), strtotime($sale->created_at->toDateString()));
+                $nestedData['reference_no'] = $sale->reference_no;
+                $nestedData['biller'] = $sale->biller->name;
+                $nestedData['customer'] = $sale->customer->name.'<input type="hidden" class="deposit" value="'.($sale->customer->deposit - $sale->customer->expense).'" />'.'<input type="hidden" class="points" value="'.$sale->customer->points.'" />';
+
+                if($sale->sale_status == 1){
+                    $nestedData['sale_status'] = '<div class="badge badge-success">'.trans('file.Completed').'</div>';
+                    $sale_status = trans('file.Completed');
+                }
+                elseif($sale->sale_status == 2){
+                    $nestedData['sale_status'] = '<div class="badge badge-danger">'.trans('file.Pending').'</div>';
+                    $sale_status = trans('file.Pending');
+                }
+                else{
+                    $nestedData['sale_status'] = '<div class="badge badge-warning">'.trans('file.Draft').'</div>';
+                    $sale_status = trans('file.Draft');
+                }
+
+                if($sale->payment_status == 1)
+                    $nestedData['payment_status'] = '<div class="badge badge-danger">'.trans('file.Pending').'</div>';
+                elseif($sale->payment_status == 2)
+                    $nestedData['payment_status'] = '<div class="badge badge-danger">'.trans('file.Due').'</div>';
+                elseif($sale->payment_status == 3)
+                    $nestedData['payment_status'] = '<div class="badge badge-warning">'.trans('file.Partial').'</div>';
+                else
+                    $nestedData['payment_status'] = '<div class="badge badge-success">'.trans('file.Paid').'</div>';
+
+                $nestedData['grand_total'] = number_format($sale->grand_total, 2);
+                $nestedData['paid_amount'] = number_format($sale->paid_amount, 2);
+                $nestedData['due'] = number_format($sale->grand_total - $sale->paid_amount, 2);
+                $nestedData['options'] = '<div class="btn-group">
+                            <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'.trans("file.action").'
+                              <span class="caret"></span>
+                              <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu edit-options dropdown-menu-right dropdown-default" user="menu">
+                                <li>
+                                    <a href="'.route('sale.recover',$sale->id).'" class="btn btn-link"><i class="fa fa-eye"></i> Recover</a>
+                                </li>
+                                <li>
+                                    <button type="button" class="btn btn-link view"><i class="fa fa-eye"></i> '.trans('file.View').'</button>
+                                </li>';
+
+
+                if(in_array("sales-delete", $request['all_permission']))
+                    $nestedData['options'] .= \Form::open(["route" => ["sales.delete", $sale->id], "method" => "POST"] ).'
+                            <li>
+                              <button type="submit" class="btn btn-link" onclick="return confirmDelete()"><i class="dripicons-trash"></i> '.trans("file.delete").'</button>
+                            </li>'.\Form::close().'
+                        </ul>
+                    </div>';
+                // data for sale details by one click
+                $coupon = Coupon::find($sale->coupon_id);
+                if($coupon)
+                    $coupon_code = $coupon->code;
+                else
+                    $coupon_code = null;
+
+                $nestedData['sale'] = array( '[ "'.date(config('date_format'), strtotime($sale->created_at->toDateString())).'"', ' "'.$sale->reference_no.'"', ' "'.$sale_status.'"', ' "'.$sale->biller->name.'"', ' "'.$sale->biller->company_name.'"', ' "'.$sale->biller->email.'"', ' "'.$sale->biller->phone_number.'"', ' "'.$sale->biller->address.'"', ' "'.$sale->biller->city.'"', ' "'.$sale->customer->name.'"', ' "'.$sale->customer->phone_number.'"', ' "'.$sale->customer->address.'"', ' "'.$sale->customer->city.'"', ' "'.$sale->id.'"', ' "'.$sale->total_tax.'"', ' "'.$sale->total_discount.'"', ' "'.$sale->total_price.'"', ' "'.$sale->order_tax.'"', ' "'.$sale->order_tax_rate.'"', ' "'.$sale->order_discount.'"', ' "'.$sale->shipping_cost.'"', ' "'.$sale->grand_total.'"', ' "'.$sale->paid_amount.'"', ' "'.preg_replace('/[\n\r]/', "<br>", $sale->sale_note).'"', ' "'.preg_replace('/[\n\r]/', "<br>", $sale->staff_note).'"', ' "'.$sale->user->name.'"', ' "'.$sale->user->email.'"', ' "'.$sale->warehouse->name.'"', ' "'.$coupon_code.'"', ' "'.$sale->coupon_discount.'"]'
+                );
+                $data[] = $nestedData;
+            }
+        }
+        $json_data = array(
+            "draw"            => intval($request->input('draw')),
+            "recordsTotal"    => intval($recordsTotal),
+            "recordsFiltered" => intval(count($sales)),
+            "data"            => $data
+        );
+
+        echo json_encode($json_data);
+    }
     public function saleData(Request $request)
     {
         $columns = array(
@@ -2420,132 +2530,280 @@ class SaleController extends Controller
         $sale_id = $request['saleIdArray'];
         foreach ($sale_id as $id) {
             $lims_sale_data = Sale::find($id);
-            $lims_product_sale_data = Product_Sale::where('sale_id', $id)->get();
-            $lims_delivery_data = Delivery::where('sale_id',$id)->first();
-            if($lims_sale_data->sale_status == 3)
-                $message = 'Draft deleted successfully';
-            else
-                $message = 'Sale deleted successfully';
-            foreach ($lims_product_sale_data as $product_sale) {
-                $lims_product_data = Product::find($product_sale->product_id);
-                //adjust product quantity
-                if( ($lims_sale_data->sale_status == 1) && ($lims_product_data->type == 'combo') ){
-                    $product_list = explode(",", $lims_product_data->product_list);
-                    if($lims_product_data->variant_list)
-                        $variant_list = explode(",", $lims_product_data->variant_list);
-                    else
-                        $variant_list = [];
-                    $qty_list = explode(",", $lims_product_data->qty_list);
+            // $lims_product_sale_data = Product_Sale::where('sale_id', $id)->get();
+            // $lims_delivery_data = Delivery::where('sale_id',$id)->first();
+            // if($lims_sale_data->sale_status == 3)
+            //     $message = 'Draft deleted successfully';
+            // else
+            //     $message = 'Sale deleted successfully';
+            // foreach ($lims_product_sale_data as $product_sale) {
+            //     $lims_product_data = Product::find($product_sale->product_id);
+            //     //adjust product quantity
+            //     if( ($lims_sale_data->sale_status == 1) && ($lims_product_data->type == 'combo') ){
+            //         $product_list = explode(",", $lims_product_data->product_list);
+            //         if($lims_product_data->variant_list)
+            //             $variant_list = explode(",", $lims_product_data->variant_list);
+            //         else
+            //             $variant_list = [];
+            //         $qty_list = explode(",", $lims_product_data->qty_list);
 
-                    foreach ($product_list as $index=>$child_id) {
-                        $child_data = Product::find($child_id);
-                        if(count($variant_list) && $variant_list[$index]) {
-                            $child_product_variant_data = ProductVariant::where([
-                                ['product_id', $child_id],
-                                ['variant_id', $variant_list[$index] ]
-                            ])->first();
+            //         foreach ($product_list as $index=>$child_id) {
+            //             $child_data = Product::find($child_id);
+            //             if(count($variant_list) && $variant_list[$index]) {
+            //                 $child_product_variant_data = ProductVariant::where([
+            //                     ['product_id', $child_id],
+            //                     ['variant_id', $variant_list[$index] ]
+            //                 ])->first();
 
-                            $child_warehouse_data = Product_Warehouse::where([
-                                ['product_id', $child_id],
-                                ['variant_id', $variant_list[$index] ],
-                                ['warehouse_id', $lims_sale_data->warehouse_id ],
-                            ])->first();
+            //                 $child_warehouse_data = Product_Warehouse::where([
+            //                     ['product_id', $child_id],
+            //                     ['variant_id', $variant_list[$index] ],
+            //                     ['warehouse_id', $lims_sale_data->warehouse_id ],
+            //                 ])->first();
 
-                             $child_product_variant_data->qty += $product_sale->qty * $qty_list[$index];
-                             $child_product_variant_data->save();
-                        }
-                        else {
-                            $child_warehouse_data = Product_Warehouse::where([
-                                ['product_id', $child_id],
-                                ['warehouse_id', $lims_sale_data->warehouse_id ],
-                            ])->first();
-                        }
+            //                  $child_product_variant_data->qty += $product_sale->qty * $qty_list[$index];
+            //                  $child_product_variant_data->save();
+            //             }
+            //             else {
+            //                 $child_warehouse_data = Product_Warehouse::where([
+            //                     ['product_id', $child_id],
+            //                     ['warehouse_id', $lims_sale_data->warehouse_id ],
+            //                 ])->first();
+            //             }
 
-                        $child_data->qty += $product_sale->qty * $qty_list[$index];
-                        $child_warehouse_data->qty += $product_sale->qty * $qty_list[$index];
+            //             $child_data->qty += $product_sale->qty * $qty_list[$index];
+            //             $child_warehouse_data->qty += $product_sale->qty * $qty_list[$index];
 
-                        $child_data->save();
-                        $child_warehouse_data->save();
-                    }
-                }
-                elseif(($lims_sale_data->sale_status == 1) && ($product_sale->sale_unit_id != 0)){
-                    $lims_sale_unit_data = Unit::find($product_sale->sale_unit_id);
-                    if ($lims_sale_unit_data->operator == '*')
-                        $product_sale->qty = $product_sale->qty * $lims_sale_unit_data->operation_value;
-                    else
-                        $product_sale->qty = $product_sale->qty / $lims_sale_unit_data->operation_value;
-                    if($product_sale->variant_id) {
-                        $lims_product_variant_data = ProductVariant::select('id', 'qty')->FindExactProduct($lims_product_data->id, $product_sale->variant_id)->first();
-                        $lims_product_warehouse_data = Product_Warehouse::FindProductWithVariant($lims_product_data->id, $product_sale->variant_id, $lims_sale_data->warehouse_id)->first();
-                        $lims_product_variant_data->qty += $product_sale->qty;
-                        $lims_product_variant_data->save();
-                    }
-                    elseif($product_sale->product_batch_id) {
-                        $lims_product_batch_data = ProductBatch::find($product_sale->product_batch_id);
-                        $lims_product_warehouse_data = Product_Warehouse::where([
-                            ['product_batch_id', $product_sale->product_batch_id],
-                            ['warehouse_id', $lims_sale_data->warehouse_id]
-                        ])->first();
+            //             $child_data->save();
+            //             $child_warehouse_data->save();
+            //         }
+            //     }
+            //     elseif(($lims_sale_data->sale_status == 1) && ($product_sale->sale_unit_id != 0)){
+            //         $lims_sale_unit_data = Unit::find($product_sale->sale_unit_id);
+            //         if ($lims_sale_unit_data->operator == '*')
+            //             $product_sale->qty = $product_sale->qty * $lims_sale_unit_data->operation_value;
+            //         else
+            //             $product_sale->qty = $product_sale->qty / $lims_sale_unit_data->operation_value;
+            //         if($product_sale->variant_id) {
+            //             $lims_product_variant_data = ProductVariant::select('id', 'qty')->FindExactProduct($lims_product_data->id, $product_sale->variant_id)->first();
+            //             $lims_product_warehouse_data = Product_Warehouse::FindProductWithVariant($lims_product_data->id, $product_sale->variant_id, $lims_sale_data->warehouse_id)->first();
+            //             $lims_product_variant_data->qty += $product_sale->qty;
+            //             $lims_product_variant_data->save();
+            //         }
+            //         elseif($product_sale->product_batch_id) {
+            //             $lims_product_batch_data = ProductBatch::find($product_sale->product_batch_id);
+            //             $lims_product_warehouse_data = Product_Warehouse::where([
+            //                 ['product_batch_id', $product_sale->product_batch_id],
+            //                 ['warehouse_id', $lims_sale_data->warehouse_id]
+            //             ])->first();
 
-                        $lims_product_batch_data->qty -= $product_sale->qty;
-                        $lims_product_batch_data->save();
-                    }
-                    else {
-                        $lims_product_warehouse_data = Product_Warehouse::FindProductWithoutVariant($lims_product_data->id, $lims_sale_data->warehouse_id)->first();
-                    }
+            //             $lims_product_batch_data->qty -= $product_sale->qty;
+            //             $lims_product_batch_data->save();
+            //         }
+            //         else {
+            //             $lims_product_warehouse_data = Product_Warehouse::FindProductWithoutVariant($lims_product_data->id, $lims_sale_data->warehouse_id)->first();
+            //         }
 
-                    $lims_product_data->qty += $product_sale->qty;
-                    $lims_product_warehouse_data->qty += $product_sale->qty;
-                    $lims_product_data->save();
-                    $lims_product_warehouse_data->save();
-                }
-                $product_sale->delete();
-            }
-            $lims_payment_data = Payment::where('sale_id', $id)->get();
-            foreach ($lims_payment_data as $payment) {
-                if($payment->paying_method == 'Gift Card'){
-                    $lims_payment_with_gift_card_data = PaymentWithGiftCard::where('payment_id', $payment->id)->first();
-                    $lims_gift_card_data = GiftCard::find($lims_payment_with_gift_card_data->gift_card_id);
-                    $lims_gift_card_data->expense -= $payment->amount;
-                    $lims_gift_card_data->save();
-                    $lims_payment_with_gift_card_data->delete();
-                }
-                elseif($payment->paying_method == 'Cheque'){
-                    $lims_payment_cheque_data = PaymentWithCheque::where('payment_id', $payment->id)->first();
-                    $lims_payment_cheque_data->delete();
-                }
-                elseif($payment->paying_method == 'Credit Card'){
-                    $lims_payment_with_credit_card_data = PaymentWithCreditCard::where('payment_id', $payment->id)->first();
-                    $lims_payment_with_credit_card_data->delete();
-                }
-                elseif($payment->paying_method == 'Paypal'){
-                    $lims_payment_paypal_data = PaymentWithPaypal::where('payment_id', $payment->id)->first();
-                    if($lims_payment_paypal_data)
-                        $lims_payment_paypal_data->delete();
-                }
-                elseif($payment->paying_method == 'Deposit'){
-                    $lims_customer_data = Customer::find($lims_sale_data->customer_id);
-                    $lims_customer_data->expense -= $payment->amount;
-                    $lims_customer_data->save();
-                }
-                $payment->delete();
-            }
-            if($lims_delivery_data)
-                $lims_delivery_data->delete();
-            if($lims_sale_data->coupon_id) {
-                $lims_coupon_data = Coupon::find($lims_sale_data->coupon_id);
-                $lims_coupon_data->used -= 1;
-                $lims_coupon_data->save();
-            }
+            //         $lims_product_data->qty += $product_sale->qty;
+            //         $lims_product_warehouse_data->qty += $product_sale->qty;
+            //         $lims_product_data->save();
+            //         $lims_product_warehouse_data->save();
+            //     }
+            //     $product_sale->delete();
+            // }
+            // $lims_payment_data = Payment::where('sale_id', $id)->get();
+            // foreach ($lims_payment_data as $payment) {
+            //     if($payment->paying_method == 'Gift Card'){
+            //         $lims_payment_with_gift_card_data = PaymentWithGiftCard::where('payment_id', $payment->id)->first();
+            //         $lims_gift_card_data = GiftCard::find($lims_payment_with_gift_card_data->gift_card_id);
+            //         $lims_gift_card_data->expense -= $payment->amount;
+            //         $lims_gift_card_data->save();
+            //         $lims_payment_with_gift_card_data->delete();
+            //     }
+            //     elseif($payment->paying_method == 'Cheque'){
+            //         $lims_payment_cheque_data = PaymentWithCheque::where('payment_id', $payment->id)->first();
+            //         $lims_payment_cheque_data->delete();
+            //     }
+            //     elseif($payment->paying_method == 'Credit Card'){
+            //         $lims_payment_with_credit_card_data = PaymentWithCreditCard::where('payment_id', $payment->id)->first();
+            //         $lims_payment_with_credit_card_data->delete();
+            //     }
+            //     elseif($payment->paying_method == 'Paypal'){
+            //         $lims_payment_paypal_data = PaymentWithPaypal::where('payment_id', $payment->id)->first();
+            //         if($lims_payment_paypal_data)
+            //             $lims_payment_paypal_data->delete();
+            //     }
+            //     elseif($payment->paying_method == 'Deposit'){
+            //         $lims_customer_data = Customer::find($lims_sale_data->customer_id);
+            //         $lims_customer_data->expense -= $payment->amount;
+            //         $lims_customer_data->save();
+            //     }
+            //     $payment->delete();
+            // }
+            // if($lims_delivery_data)
+            //     $lims_delivery_data->delete();
+            // if($lims_sale_data->coupon_id) {
+            //     $lims_coupon_data = Coupon::find($lims_sale_data->coupon_id);
+            //     $lims_coupon_data->used -= 1;
+            //     $lims_coupon_data->save();
+            // }
             $lims_sale_data->delete();
         }
         return 'Sale deleted successfully!';
     }
+    public function saleRecover($id)
+    {
+        $url = url()->previous();
+        $lims_sale_data = Sale::withTrashed()->find($id)->restore();
+        return Redirect::to($url)->with('not_permitted', "Sale Recover");
 
+    }
+
+    public function saleRecoverAll()
+    {
+        $url = url()->previous();
+        $lims_sale_data = Sale::onlyTrashed()->restore();
+        return Redirect::to($url)->with('not_permitted', "All Sale Recover");
+    }
     public function destroy($id)
     {
         $url = url()->previous();
         $lims_sale_data = Sale::find($id);
+        // $lims_product_sale_data = Product_Sale::where('sale_id', $id)->get();
+        // $lims_delivery_data = Delivery::where('sale_id',$id)->first();
+        // if($lims_sale_data->sale_status == 3)
+        //     $message = 'Draft deleted successfully';
+        // else
+        //     $message = 'Sale deleted successfully';
+
+        // foreach ($lims_product_sale_data as $product_sale) {
+        //     $lims_product_data = Product::find($product_sale->product_id);
+        //     //adjust product quantity
+        //     if( ($lims_sale_data->sale_status == 1) && ($lims_product_data->type == 'combo') ) {
+        //         $product_list = explode(",", $lims_product_data->product_list);
+        //         $variant_list = explode(",", $lims_product_data->variant_list);
+        //         $qty_list = explode(",", $lims_product_data->qty_list);
+        //         if($lims_product_data->variant_list)
+        //             $variant_list = explode(",", $lims_product_data->variant_list);
+        //         else
+        //             $variant_list = [];
+        //         foreach ($product_list as $index=>$child_id) {
+        //             $child_data = Product::find($child_id);
+        //             if(count($variant_list) && $variant_list[$index]) {
+        //                 $child_product_variant_data = ProductVariant::where([
+        //                     ['product_id', $child_id],
+        //                     ['variant_id', $variant_list[$index] ]
+        //                 ])->first();
+
+        //                 $child_warehouse_data = Product_Warehouse::where([
+        //                     ['product_id', $child_id],
+        //                     ['variant_id', $variant_list[$index] ],
+        //                     ['warehouse_id', $lims_sale_data->warehouse_id ],
+        //                 ])->first();
+
+        //                  $child_product_variant_data->qty += $product_sale->qty * $qty_list[$index];
+        //                  $child_product_variant_data->save();
+        //             }
+        //             else {
+        //                 $child_warehouse_data = Product_Warehouse::where([
+        //                     ['product_id', $child_id],
+        //                     ['warehouse_id', $lims_sale_data->warehouse_id ],
+        //                 ])->first();
+        //             }
+
+        //             $child_data->qty += $product_sale->qty * $qty_list[$index];
+        //             $child_warehouse_data->qty += $product_sale->qty * $qty_list[$index];
+
+        //             $child_data->save();
+        //             $child_warehouse_data->save();
+        //         }
+        //     }
+        //     elseif(($lims_sale_data->sale_status == 1) && ($product_sale->sale_unit_id != 0)) {
+        //         $lims_sale_unit_data = Unit::find($product_sale->sale_unit_id);
+        //         if ($lims_sale_unit_data->operator == '*')
+        //             $product_sale->qty = $product_sale->qty * $lims_sale_unit_data->operation_value;
+        //         else
+        //             $product_sale->qty = $product_sale->qty / $lims_sale_unit_data->operation_value;
+        //         if($product_sale->variant_id) {
+        //             $lims_product_variant_data = ProductVariant::select('id', 'qty')->FindExactProduct($lims_product_data->id, $product_sale->variant_id)->first();
+        //             $lims_product_warehouse_data = Product_Warehouse::FindProductWithVariant($lims_product_data->id, $product_sale->variant_id, $lims_sale_data->warehouse_id)->first();
+        //             $lims_product_variant_data->qty += $product_sale->qty;
+        //             $lims_product_variant_data->save();
+        //         }
+        //         elseif($product_sale->product_batch_id) {
+        //             $lims_product_batch_data = ProductBatch::find($product_sale->product_batch_id);
+        //             $lims_product_warehouse_data = Product_Warehouse::where([
+        //                 ['product_batch_id', $product_sale->product_batch_id],
+        //                 ['warehouse_id', $lims_sale_data->warehouse_id]
+        //             ])->first();
+
+        //             $lims_product_batch_data->qty -= $product_sale->qty;
+        //             $lims_product_batch_data->save();
+        //         }
+        //         else {
+        //             $lims_product_warehouse_data = Product_Warehouse::FindProductWithoutVariant($lims_product_data->id, $lims_sale_data->warehouse_id)->first();
+        //         }
+
+        //         $lims_product_data->qty += $product_sale->qty;
+        //         $lims_product_warehouse_data->qty += $product_sale->qty;
+        //         $lims_product_data->save();
+        //         $lims_product_warehouse_data->save();
+        //     }
+        //     if($product_sale->imei_number) {
+        //         if($lims_product_warehouse_data->imei_number)
+        //             $lims_product_warehouse_data->imei_number .= ',' . $product_sale->imei_number;
+        //         else
+        //             $lims_product_warehouse_data->imei_number = $product_sale->imei_number;
+        //         $lims_product_warehouse_data->save();
+        //     }
+        //     $product_sale->delete();
+        // }
+
+        // $lims_payment_data = Payment::where('sale_id', $id)->get();
+        // foreach ($lims_payment_data as $payment) {
+        //     if($payment->paying_method == 'Gift Card'){
+        //         $lims_payment_with_gift_card_data = PaymentWithGiftCard::where('payment_id', $payment->id)->first();
+        //         $lims_gift_card_data = GiftCard::find($lims_payment_with_gift_card_data->gift_card_id);
+        //         $lims_gift_card_data->expense -= $payment->amount;
+        //         $lims_gift_card_data->save();
+        //         $lims_payment_with_gift_card_data->delete();
+        //     }
+        //     elseif($payment->paying_method == 'Cheque'){
+        //         $lims_payment_cheque_data = PaymentWithCheque::where('payment_id', $payment->id)->first();
+        //         $lims_payment_cheque_data->delete();
+        //     }
+        //     elseif($payment->paying_method == 'Credit Card'){
+        //         $lims_payment_with_credit_card_data = PaymentWithCreditCard::where('payment_id', $payment->id)->first();
+        //         $lims_payment_with_credit_card_data->delete();
+        //     }
+        //     elseif($payment->paying_method == 'Paypal'){
+        //         $lims_payment_paypal_data = PaymentWithPaypal::where('payment_id', $payment->id)->first();
+        //         if($lims_payment_paypal_data)
+        //             $lims_payment_paypal_data->delete();
+        //     }
+        //     elseif($payment->paying_method == 'Deposit'){
+        //         $lims_customer_data = Customer::find($lims_sale_data->customer_id);
+        //         $lims_customer_data->expense -= $payment->amount;
+        //         $lims_customer_data->save();
+        //     }
+        //     $payment->delete();
+        // }
+        // if($lims_delivery_data)
+        //     $lims_delivery_data->delete();
+        // if($lims_sale_data->coupon_id) {
+        //     $lims_coupon_data = Coupon::find($lims_sale_data->coupon_id);
+        //     $lims_coupon_data->used -= 1;
+        //     $lims_coupon_data->save();
+        // }
+
+        $lims_sale_data->delete();
+        return Redirect::to($url)->with('not_permitted', "Deleted");
+    }
+
+    public function saleDelete($id)
+    {
+        $url = url()->previous();
+        $lims_sale_data = Sale::withTrashed()->find($id);
         $lims_product_sale_data = Product_Sale::where('sale_id', $id)->get();
         $lims_delivery_data = Delivery::where('sale_id',$id)->first();
         if($lims_sale_data->sale_status == 3)
@@ -2672,7 +2930,7 @@ class SaleController extends Controller
             $lims_coupon_data->used -= 1;
             $lims_coupon_data->save();
         }
-        $lims_sale_data->delete();
+        $lims_sale_data->forceDelete();
         return Redirect::to($url)->with('not_permitted', $message);
     }
 }

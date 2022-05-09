@@ -98,6 +98,11 @@ Route::group(['middleware' => ['auth', 'active','device_registration']], functio
 	Route::get('biller/lims_biller_search', 'BillerController@limsBillerSearch')->name('biller.search');
 	Route::resource('biller', 'BillerController');
 
+	Route::get('sales/sale-trash', 'SaleController@saleTrash');
+	Route::post('sales/sale-trash-data', 'SaleController@saleTrashData')->name('sale.trash.data');
+	Route::get('sales/sale-recover/{id}', 'SaleController@saleRecover')->name('sale.recover');
+	Route::post('sales/sale-delete/{id}', 'SaleController@saleDelete')->name('sales.delete');
+	Route::get('sales/sale-recover-all', 'SaleController@saleRecoverAll')->name('sale.recover.all');
 	Route::post('sales/sale-data', 'SaleController@saleData');
 	Route::post('sales/sendmail', 'SaleController@sendMail')->name('sale.sendmail');
 	Route::get('sales/sale_by_csv', 'SaleController@saleByCsv');
